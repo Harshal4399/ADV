@@ -1,0 +1,29 @@
+Dataset link-
+https://www.kaggle.com/datasets/tunguz/us-estimated-crimes
+
+Dataset Description-
+This dataset contains estimated data at the state and national level and was derived from the Summary Reporting System (SRS). These data reflect the estimates the FBI has traditionally included in its annual publications. Download this dataset to see the FBI's estimated crime totals for the nation and all 50 states.
+
+Questions-
+What is the purpose of the density plot for property crime?
+What insights can we gain from the density plot of violent crime?
+Why do we use the IQR method for outlier detection?
+What does a wider density curve in the property crime plot indicate?
+What could cause peaks in the density plot for violent crime?
+How do the property crime and violent crime distributions compare?
+Why are density plots better for this data than histograms?
+How does removing outliers affect the interpretation of the data?
+What could cause an outlier in property or violent crime data?
+Why are violent crime and property crime analyzed separately?
+
+Answers-
+The density plot for property crime offers a smooth estimate of how property crime rates were distributed across all states in 2019. It helps visualize how property crime is spread, indicating whether the distribution is skewed or balanced.
+The density plot for violent crime reveals how violent crime rates vary across states. If the plot has a central peak or clusters, it suggests that many states share similar crime rates. If the distribution is more spread out, it highlights greater variability among states. Peaks at either extreme may indicate that some states have exceptionally high or low violent crime rates.
+The Interquartile Range (IQR) method detects outliers by flagging values that deviate significantly from the bulk of the data. It's a robust method less influenced by extreme values, helping ensure that density plots reflect the main data trends without distortion from outliers.
+A wider density curve indicates greater variation in property crime rates among states. This means that some states have significantly higher or lower rates compared to others.
+Peaks in the violent crime density plot suggest that many states share similar crime rates. A single peak indicates that most states have similar crime rates, while multiple peaks suggest clusters of states with similar rates at different levels.
+By comparing the density plots for property and violent crime, we can see how consistent crime rates are across states. For example, a narrower peak for property crime and a wider spread for violent crime would suggest that property crime rates are more uniform, while violent crime rates vary more among states.
+Density plots provide a smoother representation of data distribution compared to histograms, making it easier to visualize trends. They are not limited by the fixed intervals (bins) used in histograms and offer a clearer view of the overall shape of the data distribution.
+Removing outliers ensures the density plots reflect the central trends of the data without being distorted by extreme values. This allows for a clearer and more meaningful analysis of crime rate patterns across states.
+Outliers in crime data may arise due to factors like unusually high or low populations in certain states, major local events (such as natural disasters or social unrest), or inconsistencies in reporting. Removing these outliers helps prevent them from skewing the analysis of overall crime trends.
+Violent crime and property crime are distinct in terms of societal and economic impact. Analyzing them separately allows for a clearer understanding of the factors driving each type of crime. Violent crimes typically involve harm to individuals, while property crimes affect material possessions, and the patterns may differ significantly between the two.
