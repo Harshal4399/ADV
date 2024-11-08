@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Dashboard</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    /* Basic styling for the dashboard layout */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      background-color: #f4f4f9;
+    }
+    .chart-container {
+      width: 45%;
+      margin: 20px;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h2 {
+      text-align: center;
+    }
+    svg {
+      width: 100%;
+      height: 300px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Chart containers for each visualization -->
+  <div class="chart-container" id="loan-amount-distribution">
+    <h2>Loan Amount Distribution</h2>
+    <svg></svg>
+  </div>
+
+  <div class="chart-container" id="int-rate-vs-loan-amount">
+    <h2>Interest Rate vs Loan Amount</h2>
+    <svg></svg>
+  </div>
+
+  <div class="chart-container" id="home-ownership-distribution">
+    <h2>Home Ownership Distribution</h2>
+    <svg></svg>
+  </div>
+
+  <div class="chart-container" id="annual-income-distribution">
+    <h2>Annual Income Distribution</h2>
+    <svg></svg>
+  </div>
+
+  <div class="chart-container" id="repay-fail-by-verification-status">
+    <h2>Repay Fail Rate by Verification Status</h2>
+    <svg></svg>
+  </div>
+
+  <script>
+    // Load the CSV data
+    d3.csv("C:/Harshal/Advanced Data Visualization/Exp 7. Finance Dataset/loan.csv").then(function(data) {
+      // Parse data types
+      data.forEach(d => {
+        d.loan_amnt = +d.loan_amnt;
+        d.int_rate = +d.int_rate;
+        d.annual_inc = +d.annual_inc;
+        d.repay_fail = +d.repay_fail;
+      });
+
+      // Loan Amount Distribution - Histogram
+      const loanAmountSvg = d3.select("#loan-amount-distribution svg");
+      const loanAmounts = data.map(d => d.loan_amnt);
+      const xScaleLoanAmount = d3.scaleLinear().domain([0, d3.max(loanAmounts)]).range([0, 300]);
+      const histogram = d3.bin().domain(xScaleLoanAmount.domain()).thresholds(20)(loanAmounts);
+      loanAmountSvg.selectAll("rect")
+        .data(histogram)
+        .enter().append("rect")
+        .attr("x", d => xScaleLoanAmount(d.x0))
+        .attr("y", d => 300 - (d.length * 5))
+        .attr("width", d => xScaleLoanAmount(d.x1) - xScaleLoanAmount(d.x0) - 1)
+        .attr("height", d => d.length * 5)
+        .attr("fill", "#69b3a2");
+
+      // Interest Rate vs Loan Amount - Scatter Plot
+      const intRateSvg = d3.select("#int-rate-vs-loan-amount svg");
+      const xScaleIntRate = d3.scaleLinear().domain(d3.extent(data, d => d.loan_amnt)).range([0, 300]);
+      const yScaleIntRate = d3.scaleLinear().domain(d3.extent(data, d => d.int_rate)).range([300, 0]);
+      intRateSvg.selectAll("circle")
+        .data(data)
+        .enter().append("circle")
+        .attr("cx", d => xScaleIntRate(d.loan_amnt))
+        .attr("cy", d => yScaleIntRate(d.int_rate))
+        .attr("r", 3)
+        .attr("fill", "#ff7f0e");
+
+      // Home Ownership Distribution - Bar Chart
+      const homeOwnershipSvg = d3.select("#home-ownership-distribution svg");
+      const homeOwnershipCounts = d3.rollup(data, v => v.length, d => d.home_ownership);
+      const xScaleHomeOwnership = d3.scaleBand()
+        .domain(Array.from(homeOwnershipCounts.keys()))
+        .range([0, 300])
+        .padding(0.1);
+      const yScaleHomeOwnership = d3.scaleLinear()
+        .domain([0, d3.max(homeOwnershipCounts.values())])
+        .range([300, 0]);
+      homeOwnershipSvg.selectAll("rect")
+        .data(homeOwnershipCounts)
+        .enter().append("rect")
+        .attr("x", d => xScaleHomeOwnership(d[0]))
+        .attr("y", d => yScaleHomeOwnership(d[1]))
+        .attr("width", xScaleHomeOwnership.bandwidth())
+        .attr("height", d => 300 - yScaleHomeOwnership(d[1]))
+        .attr("fill", "#1f77b4");
+
+      // Annual Income Distribution - Histogram
+      const annualIncomeSvg = d3.select("#annual-income-distribution svg");
+      const annualIncomes = data.map(d => d.annual_inc);
+      const xScaleAnnualIncome = d3.scaleLinear().domain([0, d3.max(annualIncomes)]).range([0, 300]);
+      const histogramAnnualIncome = d3.bin().domain(xScaleAnnualIncome.domain()).thresholds(20)(annualIncomes);
+      annualIncomeSvg.selectAll("rect")
+        .data(histogramAnnualIncome)
+        .enter().append("rect")
+        .attr("x", d => xScaleAnnualIncome(d.x0))
+        .attr("y", d => 300 - (d.length * 5))
+        .attr("width", d => xScaleAnnualIncome(d.x1) - xScaleAnnualIncome(d.x0) - 1)
+        .attr("height", d => d.length * 5)
+        .attr("fill", "#2ca02c");
+
+      // Repay Fail Rate by Verification Status - Bar Chart
+      const repayFailSvg = d3.select("#repay-fail-by-verification-status svg");
+      const repayFailCounts = d3.rollup(data, v => d3.mean(v, d => d.repay_fail), d => d.verification_status);
+      const xScaleRepayFail = d3.scaleBand()
+        .domain(Array.from(repayFailCounts.keys()))
+        .range([0, 300])
+        .padding(0.1);
+      const yScaleRepayFail = d3.scaleLinear().domain([0, 1]).range([300, 0]);
+      repayFailSvg.selectAll("rect")
+        .data(repayFailCounts)
+        .enter().append("rect")
+        .attr("x", d => xScaleRepayFail(d[0]))
+        .attr("y", d => yScaleRepayFail(d[1]))
+        .attr("width", xScaleRepayFail.bandwidth())
+        .attr("height", d => 300 - yScaleRepayFail(d[1]))
+        .attr("fill", "#d62728");
+    });
+  </script>
+
+</body>
+</html>
