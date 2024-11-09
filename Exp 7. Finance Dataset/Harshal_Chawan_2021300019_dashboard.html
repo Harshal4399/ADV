@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loan Dataset Visualizations</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+  <h2>1. Loan Amount Distribution</h2>
+  <div id="loanAmountDistribution" style="width: 100%; height: 500px;"></div>
+
+  <h2>2. Loan Term Distribution</h2>
+  <div id="loanTermDistribution" style="width: 100%; height: 500px;"></div>
+
+  <h2>3. Interest Rate vs Loan Amount</h2>
+  <div id="interestVsLoanAmount" style="width: 100%; height: 500px;"></div>
+
+  <h2>4. Home Ownership Distribution</h2>
+  <div id="homeOwnershipDistribution" style="width: 100%; height: 500px;"></div>
+
+  <h2>5. Annual Income vs Interest Rate</h2>
+  <div id="incomeVsInterestRate" style="width: 100%; height: 500px;"></div>
+
+  <script>
+    // Load CSV data
+    d3.csv("https://raw.githubusercontent.com/Harshal4399/ADV/refs/heads/main/Exp%207.%20Finance%20Dataset/loan.csv?token=GHSAT0AAAAAAC2DK7LGXRUNFFPW4ZACOOBWZZPEC4Q").then(data => {
+      data.forEach(d => {
+        d.loan_amnt = +d.loan_amnt;
+        d.int_rate = +d.int_rate;
+        d.annual_inc = +d.annual_inc;
+        d.repay_fail = +d.repay_fail;
+      });
+
+      // Visualization 1: Loan Amount Distribution (Histogram)
+      const loanAmountDiv = d3.select("#loanAmountDistribution");
+      const loanWidth = loanAmountDiv.node().getBoundingClientRect().width;
+      const loanHeight = 500;
+      const loanMargin = {top: 20, right: 30, bottom: 40, left: 40};
+
+      const xLoan = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.loan_amnt))
+        .nice()
+        .range([loanMargin.left, loanWidth - loanMargin.right]);
+
+      const histogram = d3.histogram()
+        .value(d => d.loan_amnt)
+        .domain(xLoan.domain())
+        .thresholds(xLoan.ticks(20));
+
+      const bins = histogram(data);
+
+      const yLoan = d3.scaleLinear()
+        .domain([0, d3.max(bins, d => d.length)])
+        .nice()
+        .range([loanHeight - loanMargin.bottom, loanMargin.top]);
+
+      const svgLoan = loanAmountDiv.append("svg")
+        .attr("width", loanWidth)
+        .attr("height", loanHeight);
+
+      svgLoan.append("g")
+        .selectAll("rect")
+        .data(bins)
+        .join("rect")
+          .attr("x", d => xLoan(d.x0) + 1)
+          .attr("y", d => yLoan(d.length))
+          .attr("width", d => xLoan(d.x1) - xLoan(d.x0) - 1)
+          .attr("height", d => yLoan(0) - yLoan(d.length))
+          .attr("fill", "steelblue");
+
+      svgLoan.append("g")
+        .attr("transform", `translate(0,${loanHeight - loanMargin.bottom})`)
+        .call(d3.axisBottom(xLoan))
+        .append("text")
+          .attr("fill", "#000")
+          .attr("x", loanWidth - loanMargin.right)
+          .attr("y", -4)
+          .attr("text-anchor", "end")
+          .text("Loan Amount");
+
+      svgLoan.append("g")
+        .attr("transform", `translate(${loanMargin.left},0)`)
+        .call(d3.axisLeft(yLoan))
+        .append("text")
+          .attr("fill", "#000")
+          .attr("x", 4)
+          .attr("y", loanMargin.top)
+          .attr("dy", "-1em")
+          .attr("text-anchor", "start")
+          .text("Frequency");
+
+      // Visualization 2: Loan Term Distribution (Bar Chart)
+      const termData = d3.rollups(data, v => v.length, d => d.term);
+      const termDiv = d3.select("#loanTermDistribution");
+      const termWidth = termDiv.node().getBoundingClientRect().width;
+      const termHeight = 500;
+
+      const xTerm = d3.scaleBand()
+        .domain(termData.map(d => d[0]))
+        .range([40, termWidth - 20])
+        .padding(0.1);
+
+      const yTerm = d3.scaleLinear()
+        .domain([0, d3.max(termData, d => d[1])])
+        .nice()
+        .range([termHeight - 40, 20]);
+
+      const svgTerm = termDiv.append("svg")
+        .attr("width", termWidth)
+        .attr("height", termHeight);
+
+      svgTerm.append("g")
+        .selectAll("rect")
+        .data(termData)
+        .join("rect")
+          .attr("x", d => xTerm(d[0]))
+          .attr("y", d => yTerm(d[1]))
+          .attr("height", d => yTerm(0) - yTerm(d[1]))
+          .attr("width", xTerm.bandwidth())
+          .attr("fill", "teal");
+
+      svgTerm.append("g")
+        .attr("transform", `translate(0,${termHeight - 40})`)
+        .call(d3.axisBottom(xTerm));
+
+      svgTerm.append("g")
+        .attr("transform", `translate(40,0)`)
+        .call(d3.axisLeft(yTerm));
+
+      // Visualization 3: Interest Rate vs Loan Amount (Scatter Plot)
+      const scatterDiv = d3.select("#interestVsLoanAmount");
+      const scatterWidth = scatterDiv.node().getBoundingClientRect().width;
+      const scatterHeight = 500;
+
+      const xScatter = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.loan_amnt)).nice()
+        .range([40, scatterWidth - 20]);
+
+      const yScatter = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.int_rate)).nice()
+        .range([scatterHeight - 40, 20]);
+
+      const svgScatter = scatterDiv.append("svg")
+        .attr("width", scatterWidth)
+        .attr("height", scatterHeight);
+
+      svgScatter.append("g")
+        .selectAll("circle")
+        .data(data)
+        .join("circle")
+          .attr("cx", d => xScatter(d.loan_amnt))
+          .attr("cy", d => yScatter(d.int_rate))
+          .attr("r", 2)
+          .attr("fill", "orange");
+
+      svgScatter.append("g")
+        .attr("transform", `translate(0,${scatterHeight - 40})`)
+        .call(d3.axisBottom(xScatter))
+        .append("text")
+          .attr("fill", "#000")
+          .attr("x", scatterWidth - 20)
+          .attr("y", -4)
+          .attr("text-anchor", "end")
+          .text("Loan Amount");
+
+      svgScatter.append("g")
+        .attr("transform", `translate(40,0)`)
+        .call(d3.axisLeft(yScatter))
+        .append("text")
+          .attr("fill", "#000")
+          .attr("x", 4)
+          .attr("y", 20)
+          .attr("dy", "-1em")
+          .attr("text-anchor", "start")
+          .text("Interest Rate");
+
+      // Continue similar logic for Visualization 4 (Home Ownership - Pie Chart)
+      const homeData = d3.rollups(data, v => v.length, d => d.home_ownership);
+      const pieDiv = d3.select("#homeOwnershipDistribution");
+      const pieWidth = pieDiv.node().getBoundingClientRect().width;
+      const pieHeight = 500;
+      const radius = Math.min(pieWidth, pieHeight) / 2;
+
+      const pie = d3.pie()
+        .value(d => d[1]);
+
+      const arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(radius - 10);
+
+      const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+      const svgPie = pieDiv.append("svg")
+        .attr("width", pieWidth)
+        .attr("height", pieHeight)
+        .append("g")
+          .attr("transform", `translate(${pieWidth / 2},${pieHeight / 2})`);
+
+      svgPie.selectAll("path")
+        .data(pie(homeData))
+        .join("path")
+          .attr("d", arc)
+          .attr("fill", d => color(d.data[0]));
+
+      svgPie.selectAll("text")
+        .data(pie(homeData))
+        .join("text")
+          .attr("transform", d => `translate(${arc.centroid(d)})`)
+          .attr("dy", "0.35em")
+          .text(d => d.data[0]);
+
+      // Visualization 5: Annual Income vs Interest Rate (Scatter Plot)
+      const incomeScatterDiv = d3.select("#incomeVsInterestRate");
+      const incomeScatterWidth = incomeScatterDiv.node().getBoundingClientRect().width;
+      const incomeScatterHeight = 500;
+
+      const xIncomeScatter = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.annual_inc)).nice()
+        .range([40, incomeScatterWidth - 20]);
+
+      const yIncomeScatter = d3.scaleLinear()
+        .domain(d3.extent(data, d => d.int_rate)).nice()
+        .range([incomeScatterHeight - 40, 20]);
+
+      const svgIncomeScatter = incomeScatterDiv.append("svg")
+        .attr("width", incomeScatterWidth)
+        .attr("height", incomeScatterHeight);
+
+      svgIncomeScatter.append("g")
+        .selectAll("circle")
+        .data(data)
+        .join("circle")
+          .attr("cx", d => xIncomeScatter(d.annual_inc))
+          .attr("cy", d => yIncomeScatter(d.int_rate))
+          .attr("r", 2)
+          .attr("fill", "purple");
+
+      svgIncomeScatter.append("g")
+        .attr("transform", `translate(0,${incomeScatterHeight - 40})`)
+        .call(d3.axisBottom(xIncomeScatter))
+        .append("text")
+          .attr("fill", "#000")
+          .attr("x", incomeScatterWidth - 20)
+          .attr("y", -4)
+          .attr("text-anchor", "end")
+          .text("Annual Income");
+
+      svgIncomeScatter.append("g")
+        .attr("transform", `translate(40,0)`)
+        .call(d3.axisLeft(yIncomeScatter))
+        .append("text")
+          .attr("fill", "#000")
+          .attr("x", 4)
+          .attr("y", 20)
+          .attr("dy", "-1em")
+          .attr("text-anchor", "start")
+          .text("Interest Rate");
+    });
+  </script>
+</body>
+</html>
